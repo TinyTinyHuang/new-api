@@ -58,6 +58,11 @@ func authHelper(c *gin.Context, minRole int) {
 		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"success": false, "code": "AUTH_INSUFFICIENT_PRIVILEGE", "message": common.TranslateMessage(c, i18n.MsgAuthInsufficientPrivilege)})
 		return
 	}
+	// CUSTOM: prompt-audit — prompt auditors may only use allow-listed dashboard APIs.
+	if common.IsPromptAuditorOnly(user.Role) && minRole < common.RolePromptAuditor && !isPromptAuditorAllowedDashboardPath(c.Request.Method, c.Request.URL.Path) {
+		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"success": false, "code": "AUTH_INSUFFICIENT_PRIVILEGE", "message": common.TranslateMessage(c, i18n.MsgAuthInsufficientPrivilege)})
+		return
+	}
 	if !validUserInfo(user.Username, user.Role) {
 		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"success": false, "code": "AUTH_USER_INVALID", "message": common.TranslateMessage(c, i18n.MsgAuthUserInfoInvalid)})
 		return
@@ -94,6 +99,36 @@ func TryUserAuth() func(c *gin.Context) {
 func UserAuth() func(c *gin.Context) {
 	return func(c *gin.Context) {
 		authHelper(c, common.RoleCommonUser)
+	}
+}
+
+func PromptAuditAuth() func(c *gin.Context) {
+	return func(c *gin.Context) {
+		authHelper(c, common.RolePromptAuditor)
+	}
+}
+
+func isPromptAuditorAllowedDashboardPath(method, path string) bool {
+	path = strings.TrimSuffix(path, "/")
+	switch {
+	case path == "/api/user/self":
+		return method == http.MethodGet || method == http.MethodPut
+	case path == "/api/user/setting":
+		return method == http.MethodPut
+	case path == "/api/user/sessions":
+		return method == http.MethodGet
+	case path == "/api/user/sessions/revoke-others":
+		return method == http.MethodPost
+	case strings.HasPrefix(path, "/api/user/sessions/"):
+		return method == http.MethodDelete
+	case strings.HasPrefix(path, "/api/user/2fa"):
+		return true
+	case strings.HasPrefix(path, "/api/user/passkey"):
+		return true
+	case strings.HasPrefix(path, "/api/user/oauth/bindings"):
+		return method == http.MethodGet || method == http.MethodDelete
+	default:
+		return false
 	}
 }
 
@@ -343,6 +378,14 @@ func TokenAuthReadOnly() func(c *gin.Context) {
 			c.Abort()
 			return
 		}
+		if common.IsPromptAuditorOnly(userCache.Role) {
+			c.JSON(http.StatusForbidden, gin.H{
+				"success": false,
+				"message": common.TranslateMessage(c, i18n.MsgAuthInsufficientPrivilege),
+			})
+			c.Abort()
+			return
+		}
 
 		c.Set("id", token.UserId)
 		c.Set("token_id", token.Id)
@@ -453,6 +496,10 @@ func TokenAuth() func(c *gin.Context) {
 		userEnabled := userCache.Status == common.UserStatusEnabled
 		if !userEnabled {
 			abortWithOpenAiMessage(c, http.StatusForbidden, common.TranslateMessage(c, i18n.MsgAuthUserBanned))
+			return
+		}
+		if common.IsPromptAuditorOnly(userCache.Role) {
+			abortWithOpenAiMessage(c, http.StatusForbidden, common.TranslateMessage(c, i18n.MsgAuthInsufficientPrivilege))
 			return
 		}
 

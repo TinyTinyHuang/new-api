@@ -28,6 +28,7 @@ import {
   ShieldAlert,
   Link2,
   CreditCard,
+  ScanSearch,
 } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -134,6 +135,8 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const isDisabled = user.status === USER_STATUS.DISABLED
   const isAdmin = user.role >= USER_ROLE.ADMIN
   const isRoot = user.role === USER_ROLE.ROOT
+  const isPromptAuditor = user.role === USER_ROLE.PROMPT_AUDITOR
+  const isCommonUser = user.role === USER_ROLE.USER
 
   if (isUserDeleted(user)) {
     return null
@@ -180,11 +183,20 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           </DropdownMenuItem>
         )}
 
-        {isAdmin && !isRoot && (
+        {(isAdmin || isPromptAuditor) && !isRoot && (
           <DropdownMenuItem onClick={() => handleManage('demote')}>
             {t('Demote')}
             <DropdownMenuShortcut>
               <ArrowDown size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        )}
+
+        {isCommonUser && (
+          <DropdownMenuItem onClick={() => handleManage('prompt_auditor')}>
+            {t('Set as Prompt Auditor')}
+            <DropdownMenuShortcut>
+              <ScanSearch size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         )}

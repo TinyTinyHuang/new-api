@@ -17,33 +17,29 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { createFileRoute, redirect } from '@tanstack/react-router'
+import z from 'zod'
 
-import { AuthenticatedLayout } from '@/components/layout'
-import {
-  isPromptAuditorAllowedPath,
-  isPromptAuditorOnly,
-} from '@/lib/roles'
+import { PromptAudits } from '@/features/prompt-audits'
+import { canAccessPromptAudits } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
-export const Route = createFileRoute('/_authenticated')({
-  beforeLoad: ({ location }) => {
+const promptAuditsSearchSchema = z.object({
+  page: z.number().optional().catch(1),
+  pageSize: z.number().optional().catch(20),
+  filter: z.string().optional().catch(''),
+  username: z.string().optional().catch(''),
+  blocked: z.array(z.string()).optional().catch([]),
+})
+
+export const Route = createFileRoute('/_authenticated/prompt-audits/')({
+  beforeLoad: () => {
     const { auth } = useAuthStore.getState()
-
-    if (!auth.user || !auth.accessToken) {
+    if (!auth.user || !canAccessPromptAudits(auth.user.role)) {
       throw redirect({
-        to: '/sign-in',
-        search: { redirect: location.href },
-      })
-    }
-
-    if (
-      isPromptAuditorOnly(auth.user.role) &&
-      !isPromptAuditorAllowedPath(location.pathname)
-    ) {
-      throw redirect({
-        to: '/prompt-audits',
+        to: '/403',
       })
     }
   },
-  component: AuthenticatedLayout,
+  validateSearch: promptAuditsSearchSchema,
+  component: PromptAudits,
 })

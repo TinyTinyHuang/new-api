@@ -1046,8 +1046,15 @@ func CreateUser(c *gin.Context) {
 		user.DisplayName = user.Username
 	}
 	myRole := c.GetInt("role")
+	if user.Role == 0 {
+		user.Role = common.RoleCommonUser
+	}
 	if user.Role >= myRole {
 		common.ApiErrorI18n(c, i18n.MsgUserCannotCreateHigherLevel)
+		return
+	}
+	if !common.IsAssignableRole(user.Role) {
+		common.ApiErrorI18n(c, i18n.MsgInvalidParams)
 		return
 	}
 	// Even for admin users, we cannot fully trust them!
@@ -1180,6 +1187,20 @@ func ManageUser(c *gin.Context) {
 			return
 		}
 		user.Role = common.RoleAdminUser
+	case "prompt_auditor":
+		if user.Role == common.RoleRootUser {
+			common.ApiErrorI18n(c, i18n.MsgUserCannotDemoteRootUser)
+			return
+		}
+		if user.Role == common.RolePromptAuditor {
+			common.ApiErrorMsg(c, "user is already a prompt auditor")
+			return
+		}
+		if user.Role >= common.RoleAdminUser && myRole != common.RoleRootUser {
+			common.ApiErrorI18n(c, i18n.MsgUserAdminCannotPromote)
+			return
+		}
+		user.Role = common.RolePromptAuditor
 	case "demote":
 		if user.Role == common.RoleRootUser {
 			common.ApiErrorI18n(c, i18n.MsgUserCannotDemoteRootUser)
@@ -1248,7 +1269,7 @@ func ManageUser(c *gin.Context) {
 		return
 	}
 
-	if req.Action == "demote" {
+	if req.Action == "demote" || req.Action == "prompt_auditor" {
 		if err := model.DB.Transaction(func(tx *gorm.DB) error {
 			if err := user.UpdateWithTx(tx, false); err != nil {
 				return err

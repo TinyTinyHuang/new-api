@@ -364,6 +364,7 @@ func migrateDB() error {
 		&SystemTaskLock{},
 		&CasbinRule{},
 		&AuthzRole{},
+		&PromptAudit{},
 	)
 	if err != nil {
 		return err
@@ -388,9 +389,15 @@ func migrateDB() error {
 
 func migrateLOGDB() error {
 	if common.UsingLogDatabase(common.DatabaseTypeClickHouse) {
-		return migrateClickHouseLogDB()
+		if err := migrateClickHouseLogDB(); err != nil {
+			return err
+		}
+		return migratePromptAudit()
 	}
-	return LOG_DB.AutoMigrate(&Log{})
+	if err := LOG_DB.AutoMigrate(&Log{}); err != nil {
+		return err
+	}
+	return migratePromptAudit()
 }
 
 func migrateClickHouseLogDB() error {

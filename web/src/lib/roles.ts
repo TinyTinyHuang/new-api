@@ -21,6 +21,7 @@ import { t } from 'i18next'
 export const ROLE = {
   GUEST: 0, // 后续如果需要用到这个角色那就再加，同语先留一下
   USER: 1,
+  PROMPT_AUDITOR: 5, // CUSTOM: prompt-audit — can only view prompt audits
   ADMIN: 10,
   SUPER_ADMIN: 100,
 } as const
@@ -32,6 +33,7 @@ const DEFAULT_ROLE = ROLE.GUEST
 const ROLE_LABEL_KEYS: Record<RoleValue, string> = {
   [ROLE.SUPER_ADMIN]: 'Super Admin',
   [ROLE.ADMIN]: 'Admin',
+  [ROLE.PROMPT_AUDITOR]: 'Prompt Auditor',
   [ROLE.USER]: 'User',
   [ROLE.GUEST]: 'Guest',
 }
@@ -42,4 +44,26 @@ export function getRoleLabelKey(role?: number): string {
 
 export function getRoleLabel(role?: number): string {
   return t(getRoleLabelKey(role))
+}
+
+export function isPromptAuditorOnly(role?: number): boolean {
+  return role === ROLE.PROMPT_AUDITOR
+}
+
+export function canAccessPromptAudits(role?: number): boolean {
+  const value = role ?? 0
+  return value === ROLE.PROMPT_AUDITOR || value >= ROLE.ADMIN
+}
+
+export function isPromptAuditorAllowedPath(pathname: string): boolean {
+  return (
+    pathname === '/prompt-audits' ||
+    pathname.startsWith('/prompt-audits/') ||
+    pathname === '/profile' ||
+    pathname.startsWith('/profile/')
+  )
+}
+
+export function defaultHomePath(role?: number): string {
+  return isPromptAuditorOnly(role) ? '/prompt-audits' : '/dashboard'
 }

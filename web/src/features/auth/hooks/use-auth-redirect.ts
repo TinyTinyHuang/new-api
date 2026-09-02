@@ -24,6 +24,7 @@ import {
   sanitizeAuthRedirect,
 } from '@/features/auth/lib/auth-redirect'
 import { applyAuthBundle } from '@/lib/api'
+import { defaultHomePath, isPromptAuditorAllowedPath, isPromptAuditorOnly } from '@/lib/roles'
 import type { AuthBundle } from '@/stores/auth-store'
 
 /**
@@ -47,8 +48,15 @@ export function useAuthRedirect() {
       await i18n.changeLanguage(savedLang)
     }
 
-    const targetPath =
-      sanitizeAuthRedirect(redirectTo, window.location.origin) ?? '/dashboard'
+    let targetPath =
+      sanitizeAuthRedirect(redirectTo, window.location.origin) ??
+      defaultHomePath(bundle.user.role)
+    if (
+      isPromptAuditorOnly(bundle.user.role) &&
+      !isPromptAuditorAllowedPath(targetPath.split('?')[0] ?? targetPath)
+    ) {
+      targetPath = defaultHomePath(bundle.user.role)
+    }
     navigate({ href: targetPath, replace: true })
   }
 

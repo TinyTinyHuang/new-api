@@ -28,6 +28,7 @@ import {
   MessageSquare,
   PlugZap,
   Radio,
+  ScanSearch,
   ServerCog,
   Settings,
   Ticket,
@@ -90,6 +91,12 @@ export function useSidebarData(): SidebarData {
             title: t('Usage Logs'),
             url: '/usage-logs/common',
             icon: FileText,
+          },
+          {
+            title: t('Prompt Audits'),
+            url: '/prompt-audits',
+            icon: ScanSearch,
+            requiredRole: ROLE.PROMPT_AUDITOR,
           },
           {
             title: t('Task Logs'),

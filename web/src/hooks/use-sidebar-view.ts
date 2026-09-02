@@ -17,12 +17,13 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 import { useLocation } from '@tanstack/react-router'
+import { ScanSearch } from 'lucide-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { resolveSidebarView } from '@/components/layout/lib/sidebar-view-registry'
 import type { NavGroup, ResolvedSidebarView } from '@/components/layout/types'
-import { ROLE } from '@/lib/roles'
+import { isPromptAuditorOnly, ROLE } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 import { useSidebarConfig } from './use-sidebar-config'
@@ -53,6 +54,21 @@ export function useSidebarView(): ResolvedSidebarView {
 
   const rootNavGroups = useMemo<NavGroup[]>(() => {
     const role = userRole ?? ROLE.GUEST
+    if (isPromptAuditorOnly(role)) {
+      return [
+        {
+          id: 'general',
+          title: t('General'),
+          items: [
+            {
+              title: t('Prompt Audits'),
+              url: '/prompt-audits',
+              icon: ScanSearch,
+            },
+          ],
+        },
+      ]
+    }
     const isAdmin = role >= ROLE.ADMIN
     return configFilteredRoot
       .filter((group) => (group.id === 'admin' ? isAdmin : true))
@@ -62,7 +78,7 @@ export function useSidebarView(): ResolvedSidebarView {
         )
         return items.length === group.items.length ? group : { ...group, items }
       })
-  }, [configFilteredRoot, userRole])
+  }, [configFilteredRoot, t, userRole])
 
   const view = resolveSidebarView(pathname)
 

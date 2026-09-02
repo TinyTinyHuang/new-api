@@ -138,13 +138,21 @@ func Relay(c *gin.Context, relayFormat types.RelayFormat) {
 		meta = fastTokenCountMetaForPricing(request)
 	}
 
+	// CUSTOM: prompt-audit — capture last user message, including blocked requests.
+	blocked := false
+	var blockedWords []string
 	if needSensitiveCheck && meta != nil {
 		contains, words := service.CheckSensitiveText(meta.CombineText)
 		if contains {
+			blocked = true
+			blockedWords = words
 			logger.LogWarn(c, fmt.Sprintf("user sensitive words detected: %s", strings.Join(words, ", ")))
-			newAPIError = types.NewError(err, types.ErrorCodeSensitiveWordsDetected)
-			return
+			newAPIError = types.NewError(fmt.Errorf("sensitive words detected"), types.ErrorCodeSensitiveWordsDetected)
 		}
+	}
+	service.CapturePromptAudit(c, request, relayInfo, blocked, blockedWords)
+	if blocked {
+		return
 	}
 
 	tokens, err := service.EstimateRequestToken(c, meta, relayInfo)

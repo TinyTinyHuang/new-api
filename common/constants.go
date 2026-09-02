@@ -187,14 +187,27 @@ const (
 )
 
 const (
-	RoleGuestUser  = 0
-	RoleCommonUser = 1
-	RoleAdminUser  = 10
-	RoleRootUser   = 100
+	RoleGuestUser       = 0
+	RoleCommonUser      = 1
+	RolePromptAuditor   = 5 // CUSTOM: prompt-audit — can only view prompt audits
+	RoleAdminUser       = 10
+	RoleRootUser        = 100
 )
 
 func IsValidateRole(role int) bool {
-	return role == RoleGuestUser || role == RoleCommonUser || role == RoleAdminUser || role == RoleRootUser
+	return role == RoleGuestUser || role == RoleCommonUser || role == RolePromptAuditor || role == RoleAdminUser || role == RoleRootUser
+}
+
+func IsAssignableRole(role int) bool {
+	return role == RoleCommonUser || role == RolePromptAuditor || role == RoleAdminUser
+}
+
+func CanAccessPromptAudit(role int) bool {
+	return role == RolePromptAuditor || role >= RoleAdminUser
+}
+
+func IsPromptAuditorOnly(role int) bool {
+	return role == RolePromptAuditor
 }
 
 var (

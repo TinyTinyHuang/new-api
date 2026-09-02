@@ -85,6 +85,7 @@ import {
 } from '../../lib/utils'
 import { USAGE_BILLING_PATH, type LogOtherData } from '../../types'
 import { PluginAuthorLink } from '../plugin-author-link'
+import { PromptAuditSection } from './prompt-audit-section'
 
 // Maps a channel-update changed-field token (as recorded by the backend audit)
 // to its i18n label key for display in the audit details.
@@ -1315,6 +1316,12 @@ export function DetailsDialog(props: DetailsDialogProps) {
             })}
           </DetailSection>
         )}
+
+        {/* CUSTOM: prompt-audit */}
+        <PromptAuditSection
+          requestId={props.log.request_id}
+          enabled={props.isAdmin}
+        />
 
         {/* Content */}
         {details && (

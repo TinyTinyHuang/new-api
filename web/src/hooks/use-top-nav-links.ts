@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next'
 
 import { useStatus } from '@/hooks/use-status'
 import { parseHeaderNavModulesFromStatus } from '@/lib/nav-modules'
+import { isPromptAuditorOnly } from '@/lib/roles'
 import { useAuthStore } from '@/stores/auth-store'
 
 export type TopNavLink = {
@@ -59,6 +60,7 @@ export function useTopNavLinks(): TopNavLink[] {
   const docsLink: string | undefined = status?.docs_link as string | undefined
 
   const isAuthed = !!auth?.user
+  const auditorOnly = isPromptAuditorOnly(auth?.user?.role)
 
   const links: TopNavLink[] = []
 
@@ -68,7 +70,7 @@ export function useTopNavLinks(): TopNavLink[] {
   }
 
   // Console -> /dashboard (new console path)
-  if (modules?.console !== false) {
+  if (modules?.console !== false && !auditorOnly) {
     links.push({ title: t('Console'), href: '/dashboard' })
   }
 

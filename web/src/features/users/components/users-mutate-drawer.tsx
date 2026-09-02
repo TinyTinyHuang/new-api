@@ -275,6 +275,7 @@ export function UsersMutateDrawer({
                         <Select
                           items={[
                             { value: '1', label: t('Common User') },
+                            { value: '5', label: t('Prompt Auditor') },
                             { value: '10', label: t('Admin') },
                           ]}
                           onValueChange={(value) =>
@@ -291,6 +292,9 @@ export function UsersMutateDrawer({
                             <SelectGroup>
                               <SelectItem value='1'>
                                 {t('Common User')}
+                              </SelectItem>
+                              <SelectItem value='5'>
+                                {t('Prompt Auditor')}
                               </SelectItem>
                               <SelectItem value='10'>{t('Admin')}</SelectItem>
                             </SelectGroup>
