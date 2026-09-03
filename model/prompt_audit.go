@@ -137,6 +137,49 @@ func GetPromptAudits(query PromptAuditQuery) (audits []*PromptAudit, total int64
 	return audits, total, nil
 }
 
+const promptAuditFilterOptionLimit = 2000
+
+type PromptAuditFilterOptions struct {
+	Usernames  []string `json:"usernames"`
+	TokenNames []string `json:"token_names"`
+}
+
+func GetPromptAuditFilterOptions() (*PromptAuditFilterOptions, error) {
+	db := promptAuditDB()
+	if db == nil {
+		return nil, errors.New("prompt audit database is not initialized")
+	}
+	options := &PromptAuditFilterOptions{
+		Usernames:  []string{},
+		TokenNames: []string{},
+	}
+	if err := db.Model(&PromptAudit{}).
+		Select("username").
+		Where("username <> ?", "").
+		Group("username").
+		Order("username ASC").
+		Limit(promptAuditFilterOptionLimit).
+		Pluck("username", &options.Usernames).Error; err != nil {
+		return nil, err
+	}
+	if err := db.Model(&PromptAudit{}).
+		Select("token_name").
+		Where("token_name <> ?", "").
+		Group("token_name").
+		Order("token_name ASC").
+		Limit(promptAuditFilterOptionLimit).
+		Pluck("token_name", &options.TokenNames).Error; err != nil {
+		return nil, err
+	}
+	if options.Usernames == nil {
+		options.Usernames = []string{}
+	}
+	if options.TokenNames == nil {
+		options.TokenNames = []string{}
+	}
+	return options, nil
+}
+
 func applyPromptAuditKeywordFilter(tx *gorm.DB, keyword string) (*gorm.DB, error) {
 	keyword = strings.TrimSpace(keyword)
 	if keyword == "" {

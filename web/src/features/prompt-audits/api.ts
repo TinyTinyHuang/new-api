@@ -22,6 +22,7 @@ import type {
   GetPromptAuditsParams,
   PromptAudit,
   PromptAuditApiResponse,
+  PromptAuditFilterOptions,
   PromptAuditsPage,
 } from './types'
 
@@ -42,6 +43,13 @@ export async function getPromptAudits(
   if (params.end_timestamp)
     query.set('end_timestamp', String(params.end_timestamp))
   const res = await api.get(`/api/log/prompt-audits?${query.toString()}`)
+  return res.data
+}
+
+export async function getPromptAuditFilterOptions(): Promise<
+  PromptAuditApiResponse<PromptAuditFilterOptions>
+> {
+  const res = await api.get('/api/log/prompt-audit-filters')
   return res.data
 }
 

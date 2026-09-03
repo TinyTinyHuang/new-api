@@ -26,11 +26,11 @@ func GetPromptAudits(c *gin.Context) {
 	startTimestamp, _ := strconv.ParseInt(c.Query("start_timestamp"), 10, 64)
 	endTimestamp, _ := strconv.ParseInt(c.Query("end_timestamp"), 10, 64)
 	audits, total, err := model.GetPromptAudits(model.PromptAuditQuery{
-		Username:       c.Query("username"),
-		TokenName:      c.Query("token_name"),
-		ModelName:      c.Query("model_name"),
+		Username:       strings.TrimSpace(c.Query("username")),
+		TokenName:      strings.TrimSpace(c.Query("token_name")),
+		ModelName:      strings.TrimSpace(c.Query("model_name")),
 		Keyword:        c.Query("keyword"),
-		RequestId:      c.Query("request_id"),
+		RequestId:      strings.TrimSpace(c.Query("request_id")),
 		Blocked:        blocked,
 		StartTimestamp: startTimestamp,
 		EndTimestamp:   endTimestamp,
@@ -44,6 +44,15 @@ func GetPromptAudits(c *gin.Context) {
 	pageInfo.SetTotal(int(total))
 	pageInfo.SetItems(audits)
 	common.ApiSuccess(c, pageInfo)
+}
+
+func GetPromptAuditFilterOptions(c *gin.Context) {
+	options, err := model.GetPromptAuditFilterOptions()
+	if err != nil {
+		common.ApiError(c, err)
+		return
+	}
+	common.ApiSuccess(c, options)
 }
 
 func GetPromptAuditByRequestId(c *gin.Context) {

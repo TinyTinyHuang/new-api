@@ -18,14 +18,19 @@ For commercial licensing, please contact support@quantumnous.com
 */
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 import { DataTablePage, useDataTable } from '@/components/data-table'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 
-import { getPromptAudits } from '../api'
+import { getPromptAuditFilterOptions, getPromptAudits } from '../api'
+import {
+  firstColumnFilterValue,
+  promptAuditSelectOptions,
+  withSelectedOption,
+} from '../lib/filters'
 import type { PromptAudit } from '../types'
 import { PromptAuditDialog } from './prompt-audit-dialog'
 import { usePromptAuditsColumns } from './prompt-audits-columns'
@@ -51,20 +56,51 @@ export function PromptAuditsTable() {
     pagination: { defaultPage: 1, defaultPageSize: 20 },
     globalFilter: { enabled: true, key: 'filter' },
     columnFilters: [
-      { columnId: 'username', searchKey: 'username', type: 'string' },
+      { columnId: 'username', searchKey: 'username', type: 'array' },
+      { columnId: 'token_name', searchKey: 'token', type: 'array' },
       { columnId: 'blocked', searchKey: 'blocked', type: 'array' },
     ],
   })
 
-  const usernameFilter =
-    (columnFilters.find((filter) => filter.id === 'username')?.value as
-      | string
-      | undefined) ?? ''
+  const usernameFilter = firstColumnFilterValue(columnFilters, 'username')
+  const tokenFilter = firstColumnFilterValue(columnFilters, 'token_name')
   const blockedFilter =
     (columnFilters.find((filter) => filter.id === 'blocked')?.value as
       | string[]
       | undefined) ?? []
   const blockedOnly = blockedFilter.includes('true')
+
+  const { data: filterOptions } = useQuery({
+    queryKey: ['prompt-audit-filters'],
+    queryFn: async () => {
+      const result = await getPromptAuditFilterOptions()
+      if (!result.success) {
+        toast.error(result.message || t('Failed to load logs'))
+        return { usernames: [], token_names: [] }
+      }
+      return {
+        usernames: result.data?.usernames || [],
+        token_names: result.data?.token_names || [],
+      }
+    },
+  })
+
+  const usernameOptions = useMemo(
+    () =>
+      withSelectedOption(
+        promptAuditSelectOptions(filterOptions?.usernames),
+        usernameFilter
+      ),
+    [filterOptions?.usernames, usernameFilter]
+  )
+  const tokenOptions = useMemo(
+    () =>
+      withSelectedOption(
+        promptAuditSelectOptions(filterOptions?.token_names),
+        tokenFilter
+      ),
+    [filterOptions?.token_names, tokenFilter]
+  )
 
   const { data, isLoading, isFetching } = useQuery({
     queryKey: [
@@ -73,6 +109,7 @@ export function PromptAuditsTable() {
       pagination.pageSize,
       globalFilter,
       usernameFilter,
+      tokenFilter,
       blockedOnly,
     ],
     queryFn: async () => {
@@ -81,6 +118,7 @@ export function PromptAuditsTable() {
         page_size: pagination.pageSize,
         keyword: globalFilter,
         username: usernameFilter,
+        token_name: tokenFilter,
         blocked: blockedOnly ? true : undefined,
       })
       if (!result.success) {
@@ -127,6 +165,18 @@ export function PromptAuditsTable() {
           searchPlaceholder: t('Search prompt text...'),
           searchDebounceMs: 500,
           filters: [
+            {
+              columnId: 'username',
+              title: t('Username'),
+              options: usernameOptions,
+              singleSelect: true,
+            },
+            {
+              columnId: 'token_name',
+              title: t('Token'),
+              options: tokenOptions,
+              singleSelect: true,
+            },
             {
               columnId: 'blocked',
               title: t('Status'),

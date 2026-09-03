@@ -54,6 +54,11 @@ export interface PromptAuditsPage {
   items: PromptAudit[]
 }
 
+export interface PromptAuditFilterOptions {
+  usernames: string[]
+  token_names: string[]
+}
+
 export interface PromptAuditApiResponse<T> {
   success: boolean
   message: string

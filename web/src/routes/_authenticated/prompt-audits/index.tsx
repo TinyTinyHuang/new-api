@@ -27,7 +27,18 @@ const promptAuditsSearchSchema = z.object({
   page: z.number().optional().catch(1),
   pageSize: z.number().optional().catch(20),
   filter: z.string().optional().catch(''),
-  username: z.string().optional().catch(''),
+  username: z
+    .preprocess(
+      (value) => (typeof value === 'string' ? [value] : value),
+      z.array(z.string()).optional()
+    )
+    .catch([]),
+  token: z
+    .preprocess(
+      (value) => (typeof value === 'string' ? [value] : value),
+      z.array(z.string()).optional()
+    )
+    .catch([]),
   blocked: z.array(z.string()).optional().catch([]),
 })
 
