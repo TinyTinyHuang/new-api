@@ -44,6 +44,7 @@ func GetEndpointTypesByChannelType(channelType int, modelName string) []constant
 			constant.EndpointTypeOpenAIResponse,
 			constant.EndpointTypeOpenAIResponseCompact,
 			constant.EndpointTypeOpenAIAlphaSearch,
+			constant.EndpointTypeImageGeneration,
 		}
 	default:
 		if IsOpenAIResponseOnlyModel(modelName) {

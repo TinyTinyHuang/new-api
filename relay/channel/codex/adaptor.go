@@ -34,7 +34,11 @@ func (a *Adaptor) ConvertAudioRequest(c *gin.Context, info *relaycommon.RelayInf
 }
 
 func (a *Adaptor) ConvertImageRequest(c *gin.Context, info *relaycommon.RelayInfo, request dto.ImageRequest) (any, error) {
-	return nil, errors.New("codex channel: endpoint not supported")
+	converted, err := convertCodexImageRequest(c, info, request)
+	if err != nil {
+		return nil, err
+	}
+	return a.ConvertOpenAIResponsesRequest(c, info, converted)
 }
 
 func (a *Adaptor) Init(info *relaycommon.RelayInfo) {
@@ -125,6 +129,8 @@ func (a *Adaptor) DoResponse(c *gin.Context, resp *http.Response, info *relaycom
 			return openai.OaiResponsesStreamHandler(c, info, resp)
 		}
 		return openai.OaiResponsesHandler(c, info, resp)
+	case relayconstant.RelayModeImagesGenerations, relayconstant.RelayModeImagesEdits:
+		return handleCodexImageResponse(c, resp)
 	default:
 		return nil, types.NewError(errors.New("codex channel: endpoint not supported"), types.ErrorCodeInvalidRequest)
 	}
@@ -141,14 +147,14 @@ func (a *Adaptor) GetChannelName() string {
 func (a *Adaptor) GetRequestURL(info *relaycommon.RelayInfo) (string, error) {
 	var path string
 	switch info.RelayMode {
-	case relayconstant.RelayModeResponses:
+	case relayconstant.RelayModeResponses, relayconstant.RelayModeImagesGenerations, relayconstant.RelayModeImagesEdits:
 		path = "/backend-api/codex/responses"
 	case relayconstant.RelayModeResponsesCompact:
 		path = "/backend-api/codex/responses/compact"
 	case relayconstant.RelayModeAlphaSearch:
 		path = "/backend-api/codex/alpha/search"
 	default:
-		return "", errors.New("codex channel: only /v1/responses, /v1/responses/compact and /v1/alpha/search are supported")
+		return "", errors.New("codex channel: only /v1/responses, /v1/images/generations, /v1/images/edits, /v1/responses/compact and /v1/alpha/search are supported")
 	}
 	return relaycommon.GetFullRequestURL(info.ChannelBaseUrl, path, info.ChannelType), nil
 }
@@ -190,7 +196,7 @@ func (a *Adaptor) SetupRequestHeader(c *gin.Context, req *http.Header, info *rel
 	// Clients may omit it or include parameters like `application/json; charset=utf-8`,
 	// which can be rejected by the upstream. Force the exact media type.
 	req.Set("Content-Type", "application/json")
-	if info.IsStream {
+	if info.IsStream || isCodexImageRelayMode(info.RelayMode) {
 		req.Set("Accept", "text/event-stream")
 	} else if req.Get("Accept") == "" {
 		req.Set("Accept", "application/json")
