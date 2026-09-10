@@ -22,6 +22,11 @@ import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { cn } from '@/lib/utils'
 
 import { defaultTopNavLinks } from '../config/top-nav.config'
+import {
+  PUBLIC_NAV_LINK_ACTIVE_CLASSES,
+  PUBLIC_NAV_LINK_CLASSES,
+  PUBLIC_NAV_LINK_IDLE_CLASSES,
+} from '../constants'
 import type { TopNavLink } from '../types'
 
 interface PublicNavigationProps {
@@ -51,17 +56,20 @@ export function PublicNavigation({
 
   return (
     <nav className={cn('hidden items-center gap-1 md:flex', className)}>
-      {links.map((link, index) => {
+      {links.map((link) => {
+        const linkKey = `${link.href}-${link.title}`
         // Handle external links
         if (link.external) {
           return (
             <a
-              key={index}
+              key={linkKey}
               href={link.href}
               target='_blank'
               rel='noopener noreferrer'
               className={cn(
-                'text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors focus:outline-none',
+                PUBLIC_NAV_LINK_CLASSES,
+                PUBLIC_NAV_LINK_IDLE_CLASSES,
+                'h-9 px-4',
                 link.disabled && 'pointer-events-none opacity-50'
               )}
             >
@@ -72,12 +80,21 @@ export function PublicNavigation({
         // Handle internal links
         return (
           <Link
-            key={index}
+            key={linkKey}
             to={link.href}
             className={cn(
-              'text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors focus:outline-none',
+              PUBLIC_NAV_LINK_CLASSES,
+              PUBLIC_NAV_LINK_IDLE_CLASSES,
+              'h-9 px-4',
               link.disabled && 'pointer-events-none opacity-50'
             )}
+            activeProps={{
+              className: cn(
+                PUBLIC_NAV_LINK_CLASSES,
+                PUBLIC_NAV_LINK_ACTIVE_CLASSES,
+                'h-9 px-4'
+              ),
+            }}
           >
             {link.title}
           </Link>

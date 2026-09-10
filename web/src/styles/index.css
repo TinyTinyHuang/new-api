@@ -100,6 +100,20 @@ For commercial licensing, please contact support@quantumnous.com
      * (defined in theme.css, swapped by `[data-theme-font='...']` blocks
      * in theme-presets.css). Defaults to the project's humanist sans. */
     font-family: var(--font-body);
+    background-image: linear-gradient(
+      165deg,
+      color-mix(in oklch, var(--primary) 8%, var(--background)) 0%,
+      var(--background) 38%
+    );
+    background-attachment: fixed;
+  }
+
+  .dark body {
+    background-image: linear-gradient(
+      165deg,
+      color-mix(in oklch, var(--primary) 14%, var(--background)) 0%,
+      var(--background) 42%
+    );
   }
 
   /* Keep sticky headers stable while primitives lock body scrolling. */

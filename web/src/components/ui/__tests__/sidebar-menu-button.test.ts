@@ -16,23 +16,17 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
+import { describe, expect, test } from 'vitest'
 
-import { HEADER_CHROME_CLASSES } from '../constants'
+import { sidebarMenuButtonVariants } from '../sidebar'
 
-type HeaderProps = React.HTMLAttributes<HTMLElement>
+describe('sidebar menu button layout', () => {
+  test('active items render as a rounded pill', () => {
+    const classes = sidebarMenuButtonVariants().split(' ')
 
-export function Header({ className, children, ...props }: HeaderProps) {
-  return (
-    <header
-      className={cn(HEADER_CHROME_CLASSES, className)}
-      {...props}
-    >
-      <div className='flex h-full items-center gap-1.5 px-2 sm:gap-2 sm:px-3'>
-        <SidebarTrigger variant='ghost' className='size-8' />
-        {children}
-      </div>
-    </header>
-  )
-}
+    expect(classes.includes('rounded-2xl')).toBeTruthy()
+    expect(classes.includes('data-active:bg-sidebar-accent')).toBeTruthy()
+    expect(classes.includes('data-active:shadow-sm')).toBeTruthy()
+    expect(classes.includes('rounded-md')).toBeFalsy()
+  })
+})

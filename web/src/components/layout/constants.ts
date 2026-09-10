@@ -55,6 +55,23 @@ export const MOBILE_DRAWER_ANIMATION = {
 } as const
 
 /**
+ * Console header chrome: frosted bar over the tinted canvas.
+ */
+export const HEADER_CHROME_CLASSES =
+  'sticky top-0 z-40 h-[var(--app-header-height,3.75rem)] w-full shrink-0 border-b border-border/50 bg-background/80 backdrop-blur-xl'
+
+/**
+ * Public / marketing nav links: pill hover and active states.
+ */
+export const PUBLIC_NAV_LINK_CLASSES =
+  'inline-flex items-center justify-center rounded-full px-3 py-1.5 text-sm font-medium transition-colors duration-200'
+
+export const PUBLIC_NAV_LINK_ACTIVE_CLASSES = 'bg-card text-primary shadow-sm'
+
+export const PUBLIC_NAV_LINK_IDLE_CLASSES =
+  'text-muted-foreground hover:bg-card/70 hover:text-foreground'
+
+/**
  * Mobile drawer configuration
  */
 export const MOBILE_DRAWER_CONFIG = {

@@ -16,23 +16,15 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 
 For commercial licensing, please contact support@quantumnous.com
 */
-import { SidebarTrigger } from '@/components/ui/sidebar'
-import { cn } from '@/lib/utils'
+import { describe, expect, test } from 'vitest'
 
-import { HEADER_CHROME_CLASSES } from '../constants'
+import { buttonVariants } from '../button'
 
-type HeaderProps = React.HTMLAttributes<HTMLElement>
+describe('button layout', () => {
+  test('default buttons use a pill radius', () => {
+    const classes = buttonVariants().split(' ')
 
-export function Header({ className, children, ...props }: HeaderProps) {
-  return (
-    <header
-      className={cn(HEADER_CHROME_CLASSES, className)}
-      {...props}
-    >
-      <div className='flex h-full items-center gap-1.5 px-2 sm:gap-2 sm:px-3'>
-        <SidebarTrigger variant='ghost' className='size-8' />
-        {children}
-      </div>
-    </header>
-  )
-}
+    expect(classes.includes('rounded-full')).toBeTruthy()
+    expect(classes.includes('rounded-lg')).toBeFalsy()
+  })
+})
